@@ -1,8 +1,9 @@
 import express from 'express';
-import {postSignup,logout,postLogin} from '../controllers/authController.js';
+import {postSignup,logout,postLogin,getMe} from '../controllers/authController.js';
 import {verifyToken} from "../middleware/isToken.js"
 const router=express.Router();
 
+router.get("/me",verifyToken,getMe);
 
 // POST /auth/signup - Handle registration
 router.post('/signup', postSignup);

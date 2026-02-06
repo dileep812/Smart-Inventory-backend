@@ -19,7 +19,7 @@ const generateTokenAndSetCookie = (user, res) => {
             id: user.id,
             email: user.email,
             role: user.role,
-            shopId: user.shop_id
+            shop_id: user.shop_id
         },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
@@ -33,9 +33,29 @@ const generateTokenAndSetCookie = (user, res) => {
         user: {
             id: user.id,
             email: user.email,
-            shop: user.shop_name
+            shop_id: user.shop_id,
+            roll:user.role
         }
     });
+};
+
+// This function handles the GET /backend/auth/me request
+export const getMe = async (req, res) => {
+    try {
+        // req.user was populated by your verifyToken middleware
+        // We send back the user data so the frontend can store it in state
+        res.status(200).json({
+            success: true,
+            user: {
+                id: req.user.id,
+                email: req.user.email,
+                shop_id: req.user.shop_id,
+                role: req.user.role // Using req.user.role as you specified
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 };
 
 export const postLogin = (req, res, next) => {
