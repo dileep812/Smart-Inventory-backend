@@ -34,7 +34,7 @@ const generateTokenAndSetCookie = (user, res) => {
             id: user.id,
             email: user.email,
             shop_id: user.shop_id,
-            roll:user.role
+            role:user.role
         }
     });
 };
