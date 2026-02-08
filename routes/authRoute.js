@@ -13,7 +13,7 @@ router.post('/signup', postSignup);
 router.post('/login', postLogin);
 
 // GET /auth/logout - Handle logout
-router.get('/logout',verifyToken,logout);
+router.get('/logout',logout);
 
 
 
