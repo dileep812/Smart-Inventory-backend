@@ -42,9 +42,15 @@ app.use(passport.initialize());
 // ======================
 
 // Auth routes (public)
+app.get("/", (req, res) => {
+    return res.status(200).json({ message: "i am working" });
+});
 app.use('/backend/auth', authRoutes);
 app.use("/backend/category",categoryRoutes)
 app.use("/backend/team",teamRoutes)
 app.use("/backend/products", productRoutes)
+
+// Basic health check
+
 
 app.listen(PORT,()=>console.log("Server is started"));
