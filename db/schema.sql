@@ -6,6 +6,9 @@
 -- Drop tables if they exist (in correct order due to foreign keys)
 -- Drop tables if they exist (in correct order due to foreign keys)
 DROP TABLE IF EXISTS stock_movements CASCADE;
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS conversation_members CASCADE;
+DROP TABLE IF EXISTS conversations CASCADE;
 DROP TABLE IF EXISTS bill_items CASCADE;
 DROP TABLE IF EXISTS bills CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
@@ -84,6 +87,61 @@ CREATE INDEX idx_products_shop ON products(shop_id);
 CREATE INDEX idx_products_category ON products(category_id);
 CREATE INDEX idx_products_sku ON products(sku);
 CREATE INDEX idx_products_name ON products(name);
+
+-- =============================================
+-- Conversations Table (Chat)
+-- =============================================
+CREATE TABLE conversations (
+    id SERIAL PRIMARY KEY,
+    shop_id INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_message_at TIMESTAMP
+);
+
+CREATE INDEX idx_conversations_shop ON conversations(shop_id);
+
+-- =============================================
+-- Conversation Members Table (Chat)
+-- =============================================
+CREATE TABLE conversation_members (
+    id SERIAL PRIMARY KEY,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_read_at TIMESTAMP
+);
+
+CREATE UNIQUE INDEX idx_conversation_members_unique ON conversation_members(conversation_id, user_id);
+CREATE INDEX idx_conversation_members_user ON conversation_members(user_id);
+
+-- =============================================
+-- Messages Table (Chat)
+-- =============================================
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    edited_at TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+
+CREATE INDEX idx_messages_conversation ON messages(conversation_id);
+CREATE INDEX idx_messages_created ON messages(created_at DESC);
+
+-- =============================================
+-- Message Deliveries Table (Delivery Receipts)
+-- =============================================
+CREATE TABLE message_deliveries (
+    id SERIAL PRIMARY KEY,
+    message_id INTEGER NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    delivered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX idx_message_deliveries_unique ON message_deliveries(message_id, user_id);
+CREATE INDEX idx_message_deliveries_user ON message_deliveries(user_id);
 
 -- =============================================
 -- Bills Table (Point of Sale)
