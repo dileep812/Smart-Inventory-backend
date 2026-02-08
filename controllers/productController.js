@@ -202,3 +202,61 @@ export const deleteProduct = async (req, res) => {
         return res.status(500).json({ success: false, message: "Failed to delete product" });
     }
 };
+
+/**
+ * POST /products/:id/adjust
+ * Adjust stock quantity and record movement
+ */
+export const adjustStock = async (req, res) => {
+    const productId = req.params.id;
+    const { adjustment_type, quantity, reason, notes } = req.body;
+
+    if (!['add', 'remove'].includes(adjustment_type)) {
+        return res.status(400).json({ success: false, message: "Invalid adjustment type" });
+    }
+
+    const qty = Number(quantity);
+    if (!Number.isFinite(qty) || qty <= 0) {
+        return res.status(400).json({ success: false, message: "Quantity must be greater than 0" });
+    }
+
+    const change = adjustment_type === 'add' ? qty : -qty;
+
+    try {
+        const productResult = await db.query(
+            'SELECT id, stock_quantity FROM products WHERE id = $1 AND shop_id = $2',
+            [productId, req.user.shop_id]
+        );
+
+        if (productResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+
+        const currentQty = Number(productResult.rows[0].stock_quantity) || 0;
+        const newQty = Math.max(0, currentQty + change);
+
+        const updateResult = await db.query(
+            `UPDATE products 
+             SET stock_quantity = $1
+             WHERE id = $2 AND shop_id = $3
+             RETURNING id, stock_quantity`,
+            [newQty, productId, req.user.shop_id]
+        );
+
+        await db.query(
+            `INSERT INTO stock_movements 
+            (shop_id, product_id, quantity_change, reason, notes, user_id)
+            VALUES ($1, $2, $3, $4, $5, $6)`,
+            [req.user.shop_id, productId, change, String(reason).trim(), notes || null, req.user.id]
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Stock adjusted",
+            product: updateResult.rows[0]
+        });
+    } catch (error) {
+        console.error('Adjust stock error:', error.message);
+        return res.status(500).json({ success: false, message: "Failed to adjust stock" });
+    }
+};
