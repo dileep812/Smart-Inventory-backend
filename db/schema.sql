@@ -6,25 +6,14 @@
 -- Drop tables if they exist (in correct order due to foreign keys)
 -- Drop tables if they exist (in correct order due to foreign keys)
 DROP TABLE IF EXISTS stock_movements CASCADE;
+DROP TABLE IF EXISTS bill_items CASCADE;
+DROP TABLE IF EXISTS bills CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS categories CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS shops CASCADE;
-DROP TABLE IF EXISTS session CASCADE;
+
 DROP TABLE IF EXISTS notifications CASCADE;
-
--- =============================================
--- Session Table (REQUIRED for connect-pg-simple)
--- =============================================
-CREATE TABLE session (
-    sid VARCHAR NOT NULL COLLATE "default",
-    sess JSON NOT NULL,
-    expire TIMESTAMP(6) NOT NULL
-)
-WITH (OIDS=FALSE);
-
-ALTER TABLE session ADD CONSTRAINT session_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE;
-CREATE INDEX idx_session_expire ON session (expire);
 
 -- =============================================
 -- Shops Table (ROOT ENTITY - Parent of all tables)
@@ -95,6 +84,43 @@ CREATE INDEX idx_products_shop ON products(shop_id);
 CREATE INDEX idx_products_category ON products(category_id);
 CREATE INDEX idx_products_sku ON products(sku);
 CREATE INDEX idx_products_name ON products(name);
+
+-- =============================================
+-- Bills Table (Point of Sale)
+-- =============================================
+CREATE TABLE bills (
+    id SERIAL PRIMARY KEY,
+    shop_id INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    subtotal DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    tax DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    discount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    total DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    payment_method VARCHAR(50) DEFAULT 'cash',
+    status VARCHAR(20) DEFAULT 'paid',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_bills_shop ON bills(shop_id);
+CREATE INDEX idx_bills_created ON bills(created_at DESC);
+
+-- =============================================
+-- Bill Items Table (Point of Sale Line Items)
+-- =============================================
+CREATE TABLE bill_items (
+    id SERIAL PRIMARY KEY,
+    bill_id INTEGER NOT NULL REFERENCES bills(id) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE SET NULL,
+    product_name VARCHAR(255) NOT NULL,
+    sku VARCHAR(100),
+    quantity INTEGER NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    line_total DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_bill_items_bill ON bill_items(bill_id);
+CREATE INDEX idx_bill_items_product ON bill_items(product_id);
 
 -- =============================================
 -- Stock Movements Table (Audit Trail)

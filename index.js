@@ -14,6 +14,7 @@ import authRoutes from './routes/authRoute.js';
 import categoryRoutes from "./routes/categoryRoute.js"
 import teamRoutes from "./routes/teamRoute.js"
 import productRoutes from "./routes/productRoute.js";
+import posRoutes from "./routes/posRoute.js";
 
 // Initialize Express app
 const app = express();
@@ -49,6 +50,7 @@ app.use('/backend/auth', authRoutes);
 app.use("/backend/category",categoryRoutes)
 app.use("/backend/team",teamRoutes)
 app.use("/backend/products", productRoutes)
+app.use("/backend/pos", posRoutes)
 
 // Basic health check
 
