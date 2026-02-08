@@ -10,7 +10,7 @@ if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('<DEV_HOST>')
     // Cloud database with connection string
     dbConfig = {
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false } // Required for Neon/Vercel Postgres
+        ssl: { rejectUnauthorized: true } // Required for Neon/Vercel Postgres
     };
 } else {
     // Local database with individual parameters

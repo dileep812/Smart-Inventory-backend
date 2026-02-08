@@ -7,11 +7,14 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import passport from "passport"
 import cors from "cors"
-import db from "./config/db.js";
+
+
 
 import authRoutes from './routes/authRoute.js';
 import categoryRoutes from "./routes/categoryRoute.js"
 import teamRoutes from "./routes/teamRoute.js"
+import productRoutes from "./routes/productRoute.js";
+
 // Initialize Express app
 const app = express();
 
@@ -23,8 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 //to read cookies
 app.use(cookieParser());
 app.use(cors({
-    origin:"http://localhost:5173",
-    cerdentials:true
+    origin: process.env.FRONTEND_LINK?.trim() || "http://localhost:5173",
+    credentials: true
 }))
 // Parse JSON bodies
 app.use(express.json());
@@ -42,5 +45,6 @@ app.use(passport.initialize());
 app.use('/backend/auth', authRoutes);
 app.use("/backend/category",categoryRoutes)
 app.use("/backend/team",teamRoutes)
+app.use("/backend/products", productRoutes)
 
-app.listen(3000,()=>console.log("Server is started"));
+app.listen(PORT,()=>console.log("Server is started"));
